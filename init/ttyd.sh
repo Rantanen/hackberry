@@ -7,6 +7,8 @@ HACK_MODULE=ttyd
 
 hack_update () {
 
+	CMAKE_OUTPUT=Makefile
+
 	hack_msg Updating dependency: libwebsockets
 	hack_indent
 
@@ -26,4 +28,5 @@ hack_update () {
 	hack_unindent
 }
 
-source init/init.inc
+DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
+source $DIR/init.inc

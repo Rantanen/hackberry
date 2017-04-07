@@ -1,7 +1,7 @@
 #!/bin/bash
 
 DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
-source $DIR/vars.inc
+source $DIR/common.inc
 
 # Ensure we are using sudo if required.
 SUDO=""
@@ -10,49 +10,70 @@ then
 	SUDO="sudo"
 fi
 
-echo
-echo Installing the Hackberry toolset
-echo
-echo Install log is being written to $HACKBERRY_LOG
-echo
+hack_msg
+hack_msg Installing the Hackberry toolset
+hack_msg
+hack_msg Install log is being written to $HACKBERRY_LOG
+hack_msg
+
+# Ensure .profile is up to date.
+if grep "^export HACKBERRY_DIR=" $HOME/.profile &> /dev/null
+then
+	if ! grep "^export HACKBERRY_DIR=$HACKBERRY_DIR$" $HOME/.profile &> /dev/null
+	then
+		hack_msg "Updating HACKBERRY_DIR=$HACKBERRY_DIR in .profile"
+		sed -i "s#^export HACKBERRY_DIR=.*#HACKBERRY_DIR=$HACKBERRY_DIR#" $HOME/.profile
+		hack_msg
+	fi
+else
+	hack_msg "Adding $HACKBERRY_DIR to .profile"
+	echo >> $HOME/.profile
+	echo "# Hackberry profile" >> $HOME/.profile
+	echo "export HACKBERRY_DIR=$HACKBERRY_DIR" >> $HOME/.profile
+	echo "source $HACKBERRY_DIR/profile" >> $HOME/.profile
+	hack_msg
+fi
 
 deps=()
 
-# Basic tooling.
-deps+=( git cmake g++ pkg-config )
+if [ "$APT_GET" != "0" ]
+then
 
-# ttyd dependencies
-deps+=( libjson-c-dev libssl-dev )
+	# Basic tooling.
+	deps+=( git cmake g++ pkg-config )
 
-echo -e ${GREEN}Ensuring the following packages are up to date:${CLEAR}
-echo ${deps[@]}
-echo
+	# ttyd dependencies
+	deps+=( libjson-c-dev libssl-dev )
 
-# $SUDO apt-get -y install ${deps[@]} | $SUDO debconf-apt-progress
-$SUDO debconf-apt-progress -- apt-get -y install ${deps[@]}
-# $SUDO apt-get -y install ${deps[@]} | cat
+	hack_msg ${GREEN}Ensuring the following packages are up to date:${CLEAR}
+	hack_msg ${deps[@]}
+	hack_msg
 
-for script in ./init/*.sh
+	$SUDO debconf-apt-progress -- apt-get -y install ${deps[@]}
+fi
+
+# Run the init scripts.
+hack_msg Running init scripts...
+hack_msg
+hack_indent
+for script in $HACKBERRY_DIR/init/*.sh
 do
-	$script update
+	hack_msg $script update
+	hack_msg
+done
+hack_unindent
+
+# Ensure the hackberry conf.d is up to date.
+echo HACKBERRY_DIR=$HACKBERRY_DIR | $SUDO tee /etc/default/hackberry > /dev/null
+
+cp -rfT $HACKBERRY_DIR/services/units.templates $HACKBERRY_DIR/services/units.current
+sed -i "s#\$HACKBERRY_DIR#$HACKBERRY_DIR#g" "$HACKBERRY_DIR"/services/units.current/*.service
+
+hack_msg Adding services...
+for service in $HACKBERRY_DIR/services/units.current/*.service
+do
+	sudo systemctl enable $service || exit $?
+	sudo systemctl start $( basename $service )
 done
 
-# Install ttyd
 
-# libwebsockets dependency.
-
-# cd ~/.hackberry
-# git clone https://github.com/warmcat/libwebsockets libs/libwebsockets
-# cd libs/libwebsockets
-# mkdir build
-# cd build
-# cmake ..
-# make
-# 
-# cd ~/.hackberry
-# git clone https://github.com/tsl0922/ttyd tools/ttyd
-# cd tools/ttyd
-# mkdir build
-# cd build
-# cmake .. -DLibwebsockets_DIR=~/.hackberry/libs/libwebsockets/build
-# make
