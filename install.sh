@@ -20,4 +20,4 @@ fi
 echo
 
 # Bootstrap done. Delegate to the normal update.
-./update.sh
+$HACKBERRY_DIR/update.sh
