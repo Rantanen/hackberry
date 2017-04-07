@@ -10,9 +10,9 @@ HACKBERRY_DIR=$(realpath $HACKBERRY_DIR)
 # Update the local repository.
 if [ -d $HACKBERRY_DIR ]
 then
-	pushd $HACKBERRY_DIR > /dev/null
+	cd $HACKBERRY_DIR
 	git pull
-	popd > /dev/null
+	cd ..
 else
 	git clone $HACKBERRY_GIT $HACKBERRY_DIR
 fi
