@@ -58,7 +58,7 @@ hack_msg
 hack_indent
 for script in $HACKBERRY_DIR/init/*.sh
 do
-	hack_msg $script update
+	$script update
 	hack_msg
 done
 hack_unindent
