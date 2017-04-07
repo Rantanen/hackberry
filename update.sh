@@ -2,6 +2,8 @@
 
 DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
 source $DIR/common.inc
+cd $HACKBERRY_DIR
+pwd
 
 # Ensure we are using sudo if required.
 SUDO=""
@@ -75,5 +77,3 @@ do
 	sudo systemctl enable $service || exit $?
 	sudo systemctl start $( basename $service )
 done
-
-
